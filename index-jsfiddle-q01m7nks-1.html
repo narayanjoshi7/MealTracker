@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meal Tracker</title>
+
+  <style>
+    body {
+    font-family: sans-serif;
+}
+
+  </style>
+
+  
+</head>
+<body>
+  <h2>Indian Meal Nutrition Tracker</h2>
+<input type="text" id="mealInput" placeholder="Enter your meal (e.g. 2 roti + 100g chana)" style="width:100%;padding:10px;" />
+<button onclick="analyzeMeal()">Analyze</button>
+
+<div id="output" style="margin-top:20px;"></div>
+
+
+  <script>
+    const foodDB = {
+    "roti": { protein: 3, carbs: 15, fat: 1, calories: 80 },
+    "boiled egg": { protein: 6.5, carbs: 0, fat: 5, calories: 70 },
+    "chana": { protein: 9, carbs: 30, fat: 2, calories: 170 }, // per 100g
+    "milk": { protein: 6.5, carbs: 10, fat: 4, calories: 110 }, // 200ml
+    "whey": { protein: 20, carbs: 2, fat: 1, calories: 100 }, // 1 scoop
+    "banana": { protein: 1, carbs: 27, fat: 0.3, calories: 105 },
+    "dal khichdi": { protein: 7, carbs: 40, fat: 4, calories: 250 },
+    "dhokla": { protein: 2, carbs: 10, fat: 3, calories: 70 },
+    "rice": { protein: 2.5, carbs: 45, fat: 0.5, calories: 200 }, // 1 bowl
+    "paneer": { protein: 18, carbs: 6, fat: 20, calories: 260 }, // 100g
+};
+
+const aliases = {
+    "egg": "boiled egg",
+    "eggs": "boiled egg",
+    "banana": "banana",
+    "bananas": "banana",
+    "roti": "roti",
+    "rotis": "roti",
+    "chana": "chana",
+    "rice": "rice",
+    "bowl rice": "rice",
+    "chawal": "rice",
+    "paneer": "paneer",
+    "dal": "dal khichdi",
+    "khichdi": "dal khichdi",
+    "whey protein": "whey",
+    "milk": "milk",
+    "scoop whey": "whey",
+    "dhokla": "dhokla",
+    "piece dhokla": "dhokla",
+};
+
+function normalize(itemName) {
+    itemName = itemName.trim().toLowerCase();
+    if (aliases[itemName]) return aliases[itemName];
+    return itemName;
+}
+
+function analyzeMeal() {
+    const input = document.getElementById("mealInput").value.toLowerCase();
+    const items = input.split("+").map(item => item.trim());
+
+    let total = { protein: 0, carbs: 0, fat: 0, calories: 0 };
+    let rows = "";
+
+    items.forEach(entry => {
+        const match = entry.match(/(\d+)\s*(g|ml|piece|pieces|scoop|plate|bowl)?\s*(.+)?/);
+        if (!match) return;
+
+        let quantity = parseInt(match[1]) || 1;
+        let rawName = (match[3] || match[2] || "").trim();
+        let itemName = normalize(rawName);
+
+        const food = foodDB[itemName];
+        if (!food) {
+            rows += `<tr><td colspan="5">Unknown item: "${entry}"</td></tr>`;
+            return;
+        }
+
+        let protein = food.protein * quantity;
+        let carbs = food.carbs * quantity;
+        let fat = food.fat * quantity;
+        let calories = food.calories * quantity;
+
+        total.protein += protein;
+        total.carbs += carbs;
+        total.fat += fat;
+        total.calories += calories;
+
+        rows += `<tr>
+            <td>${quantity} ${itemName}</td>
+            <td>${calories}</td>
+            <td>${protein.toFixed(1)}</td>
+            <td>${carbs.toFixed(1)}</td>
+            <td>${fat.toFixed(1)}</td>
+        </tr>`;
+    });
+
+    document.getElementById("output").innerHTML = `
+        <table border="1" cellpadding="10">
+            <tr><th>Item</th><th>Calories</th><th>Protein (g)</th><th>Carbs (g)</th><th>Fat (g)</th></tr>
+            ${rows}
+            <tr style="font-weight:bold">
+                <td>Total</td>
+                <td>${total.calories.toFixed(1)}</td>
+                <td>${total.protein.toFixed(1)}</td>
+                <td>${total.carbs.toFixed(1)}</td>
+                <td>${total.fat.toFixed(1)}</td>
+            </tr>
+        </table>`;
+}
+
+  </script>
+</body>
+</html>
