@@ -44,112 +44,145 @@
     </div>
   </div>
 
-  <script>
-    let foodDB = {
-      banana: { calories: 105, protein: 1.3, carbs: 27, fat: 0.3 },
-      "boiled egg": { calories: 70, protein: 6.5, carbs: 0, fat: 5 },
-      roti: { calories: 80, protein: 3, carbs: 15, fat: 1 },
-      rice: { calories: 130, protein: 2.5, carbs: 28, fat: 0.3 },
-      "100g paneer": { calories: 260, protein: 18, carbs: 6, fat: 20 }
-    };
+<script>
+  let foodDB = {
+    banana: { calories: 105, protein: 1.3, carbs: 27, fat: 0.3 },
+    "boiled egg": { calories: 70, protein: 6.5, carbs: 0, fat: 5 },
+    roti: { calories: 80, protein: 3, carbs: 15, fat: 1 },
+    rice: { calories: 130, protein: 2.5, carbs: 28, fat: 0.3 },
+    "100g paneer": { calories: 260, protein: 18, carbs: 6, fat: 20 }
+  };
 
-    const savedFoods = JSON.parse(localStorage.getItem("customFoods"));
-    if (savedFoods) {
-      foodDB = { ...foodDB, ...savedFoods };
-    }
+  const savedFoods = JSON.parse(localStorage.getItem("customFoods"));
+  if (savedFoods) {
+    foodDB = { ...foodDB, ...savedFoods };
+  }
 
-    function calculateNutrition() {
-      const input = document.getElementById("mealInput").value.toLowerCase();
-      let total = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-      let rows = "";
+  function calculateNutrition() {
+    const input = document.getElementById("mealInput").value.toLowerCase();
+    let total = { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    let rows = "";
 
-      for (let item in foodDB) {
-        const regex = new RegExp(`(\\d+)?\\s*${item}`, "gi");
-        let match;
-        while ((match = regex.exec(input)) !== null) {
-          const qty = parseFloat(match[1]) || 1;
-          const data = foodDB[item];
-          const itemCalories = data.calories * qty;
-          const itemProtein = data.protein * qty;
-          const itemCarbs = data.carbs * qty;
-          const itemFat = data.fat * qty;
+    for (let item in foodDB) {
+      const regex = new RegExp(`(\\d+)?\\s*${item}`, "gi");
+      let match;
+      while ((match = regex.exec(input)) !== null) {
+        const qty = parseFloat(match[1]) || 1;
+        const data = foodDB[item];
+        const itemCalories = data.calories * qty;
+        const itemProtein = data.protein * qty;
+        const itemCarbs = data.carbs * qty;
+        const itemFat = data.fat * qty;
 
-          total.calories += itemCalories;
-          total.protein += itemProtein;
-          total.carbs += itemCarbs;
-          total.fat += itemFat;
+        total.calories += itemCalories;
+        total.protein += itemProtein;
+        total.carbs += itemCarbs;
+        total.fat += itemFat;
 
-          rows += `
-            <tr>
-              <td>${qty} ${item}</td>
-              <td>${itemCalories.toFixed(1)} kcal</td>
-              <td>${itemProtein.toFixed(1)} g</td>
-              <td>${itemCarbs.toFixed(1)} g</td>
-              <td>${itemFat.toFixed(1)} g</td>
-            </tr>
-          `;
-        }
-      }
-
-      const resultTable = `
-        <h3>Nutrition Breakdown</h3>
-        <table>
-          <tr><th>Item</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr>
-          ${rows}
-          <tr style="font-weight:bold; background:#f4f4f4">
-            <td>Total</td>
-            <td>${total.calories.toFixed(1)} kcal</td>
-            <td>${total.protein.toFixed(1)} g</td>
-            <td>${total.carbs.toFixed(1)} g</td>
-            <td>${total.fat.toFixed(1)} g</td>
+        rows += `
+          <tr>
+            <td>${qty} ${item}</td>
+            <td>${itemCalories.toFixed(1)} kcal</td>
+            <td>${itemProtein.toFixed(1)} g</td>
+            <td>${itemCarbs.toFixed(1)} g</td>
+            <td>${itemFat.toFixed(1)} g</td>
           </tr>
-        </table>
-      `;
-
-      document.getElementById("results").innerHTML = rows ? resultTable : "<p>No matches found. Try adding items or checking spelling.</p>";
+        `;
+      }
     }
 
-    function openAddModal() {
-      document.getElementById("addModal").style.display = "flex";
+    const resultTable = `
+      <h3>Nutrition Breakdown</h3>
+      <table>
+        <tr><th>Item</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr>
+        ${rows}
+        <tr style="font-weight:bold; background:#f4f4f4">
+          <td>Total</td>
+          <td>${total.calories.toFixed(1)} kcal</td>
+          <td>${total.protein.toFixed(1)} g</td>
+          <td>${total.carbs.toFixed(1)} g</td>
+          <td>${total.fat.toFixed(1)} g</td>
+        </tr>
+      </table>
+    `;
+
+    document.getElementById("results").innerHTML = rows ? resultTable : "<p>No matches found. Try adding items or checking spelling.</p>";
+  }
+
+  function openAddModal() {
+    document.getElementById("addModal").style.display = "flex";
+  }
+
+  function closeAddModal() {
+    document.getElementById("addModal").style.display = "none";
+    document.getElementById("foodName").value = "";
+    document.getElementById("caloriesVal").value = "";
+    document.getElementById("proteinVal").value = "";
+    document.getElementById("carbsVal").value = "";
+    document.getElementById("fatVal").value = "";
+  }
+
+  function saveCustomFood() {
+    const name = document.getElementById("foodName").value.toLowerCase().trim();
+    const calories = parseFloat(document.getElementById("caloriesVal").value);
+    const protein = parseFloat(document.getElementById("proteinVal").value);
+    const carbs = parseFloat(document.getElementById("carbsVal").value);
+    const fat = parseFloat(document.getElementById("fatVal").value);
+
+    if (!name || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
+      alert("Please fill in all fields correctly.");
+      return;
     }
 
-    function closeAddModal() {
-      document.getElementById("addModal").style.display = "none";
-      document.getElementById("foodName").value = "";
-      document.getElementById("caloriesVal").value = "";
-      document.getElementById("proteinVal").value = "";
-      document.getElementById("carbsVal").value = "";
-      document.getElementById("fatVal").value = "";
+    foodDB[name] = { calories, protein, carbs, fat };
+    localStorage.setItem("customFoods", JSON.stringify(getCustomFoods()));
+    closeAddModal();
+    alert(`Saved "${name}" successfully!`);
+  }
+
+  function getCustomFoods() {
+    const original = ["banana", "boiled egg", "roti", "rice", "100g paneer"];
+    const custom = {};
+    for (let key in foodDB) {
+      if (!original.includes(key)) {
+        custom[key] = foodDB[key];
+      }
+    }
+    return custom;
+  }
+
+  async function fetchFromAPI() {
+    const name = document.getElementById("foodName").value.trim();
+    if (!name) {
+      alert("Enter a food item name first.");
+      return;
     }
 
-    function saveCustomFood() {
-      const name = document.getElementById("foodName").value.toLowerCase().trim();
-      const calories = parseFloat(document.getElementById("caloriesVal").value);
-      const protein = parseFloat(document.getElementById("proteinVal").value);
-      const carbs = parseFloat(document.getElementById("carbsVal").value);
-      const fat = parseFloat(document.getElementById("fatVal").value);
+    const app_id = "55a75700";  // Replace with your actual Edamam App ID
+    const app_key = "023ce47929a7cf45c4f6143e5591ed5a";  // Replace with your actual App Key
 
-      if (!name || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
-        alert("Please fill in all fields correctly.");
+    const url = `https://api.edamam.com/api/nutrition-data?app_id=${app_id}&app_key=${app_key}&ingr=${encodeURIComponent(name)}`;
+
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (!data.totalNutrients || !data.calories) {
+        alert("❌ No nutrition data found for this item. Try refining your input or check online.");
         return;
       }
 
-      foodDB[name] = { calories, protein, carbs, fat };
-      localStorage.setItem("customFoods", JSON.stringify(getCustomFoods()));
-      closeAddModal();
-      alert(`Saved "${name}" successfully!`);
-    }
+      document.getElementById("caloriesVal").value = data.calories.toFixed(1);
+      document.getElementById("proteinVal").value = (data.totalNutrients.PROCNT?.quantity || 0).toFixed(1);
+      document.getElementById("carbsVal").value = (data.totalNutrients.CHOCDF?.quantity || 0).toFixed(1);
+      document.getElementById("fatVal").value = (data.totalNutrients.FAT?.quantity || 0).toFixed(1);
 
-    function getCustomFoods() {
-      const original = ["banana", "boiled egg", "roti", "rice", "100g paneer"];
-      const custom = {};
-      for (let key in foodDB) {
-        if (!original.includes(key)) {
-          custom[key] = foodDB[key];
-        }
-      }
-      return custom;
+    } catch (error) {
+      console.error(error);
+      alert("⚠️ Failed to fetch from API. Check your internet or try again later.");
     }
-  </script>
+  }
+</script>
+
 </body>
 </html>
