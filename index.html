@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Meal Tracker</title>
   <style>
-    body { font-family: Arial; margin: 20px; }
+    body { font-family: Arial, sans-serif; margin: 20px; }
     textarea, input { width: 100%; padding: 8px; margin: 5px 0; }
-    button { padding: 10px 15px; margin-top: 10px; }
+    button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
     .modal {
       display: none; position: fixed; top: 0; left: 0;
       width: 100%; height: 100%; background: rgba(0,0,0,0.6);
@@ -22,21 +24,20 @@
 <body>
   <h2>🍽️ Simple Meal Tracker</h2>
 
-  <textarea id="mealInput" placeholder="e.g. 2 roti + 1 boiled egg + 1 banana"></textarea>
+  <textarea id="mealInput" rows="4" placeholder="e.g. 2 roti + 1 boiled egg + 1 banana"></textarea>
   <button onclick="calculateNutrition()">Calculate Nutrition</button>
   <button onclick="openAddModal()">➕ Add New Food Item</button>
 
-  <h3>Results:</h3>
   <div id="results"></div>
 
-  <!-- Add New Food Item Modal -->
+  <!-- Add Food Modal -->
   <div id="addModal" class="modal">
     <div class="modal-content">
       <h3>Add Custom Food</h3>
-      <input id="foodName" placeholder="e.g. Paneer bhurji"/>
-      <input type="number" id="proteinVal" placeholder="Protein (g)"/>
-      <input type="number" id="carbsVal" placeholder="Carbs (g)"/>
-      <input type="number" id="fatVal" placeholder="Fat (g)"/>
+      <input id="foodName" placeholder="e.g. Paneer bhurji" />
+      <input type="number" id="proteinVal" placeholder="Protein (g)" />
+      <input type="number" id="carbsVal" placeholder="Carbs (g)" />
+      <input type="number" id="fatVal" placeholder="Fat (g)" />
       <button onclick="saveCustomFood()">Save</button>
       <button onclick="closeAddModal()">Cancel</button>
     </div>
@@ -71,9 +72,13 @@
       }
 
       document.getElementById("results").innerHTML = `
-        <p>Protein: <b>${total.protein.toFixed(1)}g</b></p>
-        <p>Carbs: <b>${total.carbs.toFixed(1)}g</b></p>
-        <p>Fat: <b>${total.fat.toFixed(1)}g</b></p>
+        <h3>Nutrition Breakdown</h3>
+        <table>
+          <tr><th>Nutrient</th><th>Amount</th></tr>
+          <tr><td>Protein</td><td><b>${total.protein.toFixed(1)} g</b></td></tr>
+          <tr><td>Carbohydrates</td><td><b>${total.carbs.toFixed(1)} g</b></td></tr>
+          <tr><td>Fat</td><td><b>${total.fat.toFixed(1)} g</b></td></tr>
+        </table>
       `;
     }
 
@@ -83,6 +88,10 @@
 
     function closeAddModal() {
       document.getElementById("addModal").style.display = "none";
+      document.getElementById("foodName").value = "";
+      document.getElementById("proteinVal").value = "";
+      document.getElementById("carbsVal").value = "";
+      document.getElementById("fatVal").value = "";
     }
 
     function saveCustomFood() {
@@ -92,26 +101,4 @@
       const fat = parseFloat(document.getElementById("fatVal").value);
 
       if (!name || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
-        alert("Please fill in all fields correctly.");
-        return;
-      }
-
-      foodDB[name] = { protein, carbs, fat };
-      localStorage.setItem("customFoods", JSON.stringify(getCustomFoods()));
-      closeAddModal();
-      alert(`Saved "${name}" successfully!`);
-    }
-
-    function getCustomFoods() {
-      const original = ["banana", "boiled egg", "roti", "rice"];
-      const custom = {};
-      for (let key in foodDB) {
-        if (!original.includes(key)) {
-          custom[key] = foodDB[key];
-        }
-      }
-      return custom;
-    }
-  </script>
-</body>
-</html>
+        alert("Please fill in all fields correctly."
