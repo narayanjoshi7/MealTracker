@@ -1,259 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Meal Tracker</title>
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-textarea, input { width: 100%; padding: 8px; margin: 5px 0; }
-button { padding: 10px 15px; margin-top: 10px; cursor: pointer; }
-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-th, td { padding: 8px; border: 1px solid #ccc; text-align: left; }
-.modal {
-display: none; position: fixed; top: 0; left: 0;
-width: 100%; height: 100%; background: rgba(0,0,0,0.6);
-justify-content: center; align-items: center;
-}
-.modal-content {
-background: #fff; padding: 20px; border-radius: 5px;
-width: 300px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Meal Tracker</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 8px; margin: 5px; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+  </style>
 </head>
 <body>
-<h2>🍽️ Simple Meal Tracker</h2>
+  <h2>Meal Tracker</h2>
 
-<textarea id="mealInput" rows="4" placeholder="e.g. 2 roti + 1 boiled egg + 1 banana"></textarea>
-<button onclick="calculateNutrition()">Calculate Nutrition</button>
-<button onclick="openAddModal()">➕ Add New Food Item</button>
+  <!-- Add Meal Entry -->
+  <input type="text" id="foodInput" placeholder="e.g., 1 roti, dal khichdi, 5 almonds">
+  <button onclick="addFood()">Add</button>
 
-<div id="results"></div>
+  <!-- Add New Food Item Section -->
+  <h3>Add New Food Item</h3>
+  <input type="text" id="newFoodName" placeholder="Food name">
+  <input type="number" id="newCalories" placeholder="Calories">
+  <input type="number" id="newProtein" placeholder="Protein">
+  <input type="number" id="newCarbs" placeholder="Carbs">
+  <input type="number" id="newFat" placeholder="Fat">
+  <button onclick="addNewFood()">Add Food Item</button>
 
-<!-- Add Food Modal -->
-<div id="addModal" class="modal">
-<div class="modal-content">
-<h3>Add Custom Food</h3>
-<input id="foodName" placeholder="e.g. Paneer bhurji" />
-<button onclick="fetchFromAPI()">🔍 Fetch from API</button>
-<input type="number" id="caloriesVal" placeholder="Calories (kcal)" />
-<input type="number" id="proteinVal" placeholder="Protein (g)" />
-<input type="number" id="carbsVal" placeholder="Carbs (g)" />
-<input type="number" id="fatVal" placeholder="Fat (g)" />
-<button onclick="saveCustomFood()">Save</button>
-<button onclick="closeAddModal()">Cancel</button>
-</div>
-</div>
+  <!-- Table to display added meals -->
+  <table>
+    <thead>
+      <tr>
+        <th>Food</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th>
+      </tr>
+    </thead>
+    <tbody id="mealList"></tbody>
+    <tfoot>
+      <tr style="font-weight: bold;">
+        <td>Total</td>
+        <td id="totalCalories">0</td>
+        <td id="totalProtein">0</td>
+        <td id="totalCarbs">0</td>
+        <td id="totalFat">0</td>
+      </tr>
+    </tfoot>
+  </table>
 
-<script>
-let foodDB = {
-    banana: { calories: 105, protein: 1.3, carbs: 27, fat: 0.3 },
-    "boiled egg": { calories: 70, protein: 6.5, carbs: 0, fat: 5 },
-    // Preworkout
-    banana: { calories: 90, protein: 1.1, carbs: 23, fat: 0.3 },
-    "5 almonds": { calories: 35, protein: 1.2, carbs: 1.2, fat: 3 },
-    "3-4 raisins": { calories: 12, protein: 0.1, carbs: 3, fat: 0 },
-    "dry date": { calories: 23, protein: 0.2, carbs: 6, fat: 0 },
-    "2 walnuts": { calories: 52, protein: 1.2, carbs: 1.1, fat: 5 },
-    "1 scoop protein + 200ml milk": { calories: 200, protein: 25, carbs: 8, fat: 5 },
+  <script>
+    const foodDB = {
+      "banana": { calories: 90, protein: 1.1, carbs: 23, fat: 0.3 },
+      "boiled egg": { calories: 70, protein: 6.5, carbs: 0, fat: 5 },
+      "almond": { calories: 7, protein: 0.24, carbs: 0.24, fat: 0.6 },
+      "raisin": { calories: 4, protein: 0.03, carbs: 0.75, fat: 0 },
+      "dry date": { calories: 23, protein: 0.2, carbs: 6, fat: 0 },
+      "walnut": { calories: 26, protein: 0.6, carbs: 0.55, fat: 2.5 },
+      "protein shake": { calories: 200, protein: 25, carbs: 8, fat: 5 },
+      "apple": { calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
+      "chikoo": { calories: 86, protein: 0.4, carbs: 22, fat: 1.1 },
+      "poha": { calories: 180, protein: 3, carbs: 30, fat: 5 },
+      "upma": { calories: 200, protein: 4, carbs: 30, fat: 7 },
+      "shevaya upma": { calories: 190, protein: 4, carbs: 32, fat: 6 },
+      "sabudana khichadi": { calories: 300, protein: 3, carbs: 45, fat: 10 },
+      "idli": { calories: 60, protein: 2, carbs: 12, fat: 0.5 },
+      "dosa": { calories: 125, protein: 2.5, carbs: 20, fat: 4 },
+      "sambar": { calories: 100, protein: 5, carbs: 15, fat: 3 },
+      "coconut chutney": { calories: 90, protein: 1, carbs: 4, fat: 8 },
+      "sheera": { calories: 350, protein: 4, carbs: 50, fat: 15 },
+      "milk": { calories: 130, protein: 6.4, carbs: 10, fat: 7.6 },
+      "mango": { calories: 100, protein: 1, carbs: 25, fat: 0.5 },
+      "orange": { calories: 60, protein: 1.2, carbs: 15, fat: 0.2 },
+      "watermelon": { calories: 45, protein: 0.9, carbs: 11, fat: 0.2 },
+      "muskmelon": { calories: 60, protein: 1, carbs: 14, fat: 0.3 },
+      "guava": { calories: 68, protein: 2.6, carbs: 14, fat: 1 },
+      "custard apple": { calories: 94, protein: 2.1, carbs: 24, fat: 0.4 },
+      "papaya": { calories: 60, protein: 0.6, carbs: 15, fat: 0.1 },
+      "roti": { calories: 80, protein: 3, carbs: 15, fat: 1 },
+      "paneer": { calories: 260, protein: 18, carbs: 6, fat: 20 },
+      "paneer curry": { calories: 300, protein: 16, carbs: 10, fat: 22 },
+      "rice": { calories: 130, protein: 2.5, carbs: 28, fat: 0.3 },
+      "dal": { calories: 140, protein: 7, carbs: 20, fat: 4 },
+      "curd": { calories: 60, protein: 3.5, carbs: 5, fat: 3 },
+      "vegetable gawar": { calories: 80, protein: 2.5, carbs: 10, fat: 3 },
+      "potato sabji": { calories: 150, protein: 2, carbs: 25, fat: 6 },
+      "methi sabji": { calories: 120, protein: 3, carbs: 10, fat: 5 },
+      "palak": { calories: 70, protein: 3, carbs: 8, fat: 2 },
+      "bhindi": { calories: 90, protein: 2.5, carbs: 11, fat: 4 },
+      "dudhi": { calories: 45, protein: 1.2, carbs: 9, fat: 1 },
+      "pumpkin": { calories: 50, protein: 1, carbs: 12, fat: 0.2 },
+      "karela": { calories: 60, protein: 1.5, carbs: 13, fat: 0.5 },
+      "cabbage": { calories: 25, protein: 1.3, carbs: 5, fat: 0.1 },
+      "cauliflower": { calories: 30, protein: 2, carbs: 5, fat: 0.3 },
+      "capsicum": { calories: 40, protein: 1, carbs: 9, fat: 0.2 },
+      "beans": { calories: 50, protein: 2.4, carbs: 10, fat: 0.4 },
+      "cucumber": { calories: 15, protein: 0.7, carbs: 4, fat: 0.1 },
+      "beetroot": { calories: 40, protein: 1.6, carbs: 10, fat: 0.1 },
+      "carrot": { calories: 45, protein: 1, carbs: 10, fat: 0.2 },
+      "jaggery": { calories: 15, protein: 0, carbs: 4, fat: 0 },
+      "makhana": { calories: 70, protein: 3, carbs: 10, fat: 2 },
+      "chana": { calories: 170, protein: 9, carbs: 30, fat: 2 },
+      "cashews": { calories: 150, protein: 5, carbs: 9, fat: 12 },
+      "kadhi": { calories: 150, protein: 5, carbs: 20, fat: 6 },
+      "pulav": { calories: 300, protein: 6, carbs: 45, fat: 10 },
+      "jowar roti": { calories: 100, protein: 2.5, carbs: 22, fat: 1.5 },
+      "pithla": { calories: 120, protein: 5, carbs: 10, fat: 6 },
+      "pav bhaji": { calories: 400, protein: 8, carbs: 50, fat: 20 },
+      "daliya": { calories: 150, protein: 5, carbs: 30, fat: 1 },
+      "thalipeeth": { calories: 120, protein: 3, carbs: 20, fat: 4 },
+      "dhapate": { calories: 140, protein: 3.5, carbs: 22, fat: 5 }
+    };
 
-    // Breakfast
-    apple: { calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
-    chikoo: { calories: 86, protein: 0.4, carbs: 22, fat: 1.1 },
-    poha: { calories: 180, protein: 3, carbs: 30, fat: 5 },
-    upma: { calories: 200, protein: 4, carbs: 30, fat: 7 },
-    "shevaya upma": { calories: 190, protein: 4, carbs: 32, fat: 6 },
-    "sabudana khichadi": { calories: 300, protein: 3, carbs: 45, fat: 10 },
-    idli: { calories: 60, protein: 2, carbs: 12, fat: 0.5 },
-    dosa: { calories: 125, protein: 2.5, carbs: 20, fat: 4 },
-    sambar: { calories: 100, protein: 5, carbs: 15, fat: 3 },
-    "coconut chutney": { calories: 90, protein: 1, carbs: 4, fat: 8 },
-    sheera: { calories: 350, protein: 4, carbs: 50, fat: 15 },
-    "protein powder with milk": { calories: 200, protein: 25, carbs: 8, fat: 5 },
-    milk: { calories: 130, protein: 6.4, carbs: 10, fat: 7.6 },
+    function parseFoodInput(input) {
+      const match = input.toLowerCase().match(/(\d+)?\s*(.+)/);
+      if (!match) return null;
+      const quantity = parseInt(match[1]) || 1;
+      const namePart = match[2].trim();
+      let bestMatch = Object.keys(foodDB).find(item => namePart.includes(item));
+      if (!bestMatch) return null;
+      return { item: bestMatch, quantity };
+    }
 
-    // Mid-morning
-    mango: { calories: 100, protein: 1, carbs: 25, fat: 0.5 },
-    orange: { calories: 60, protein: 1.2, carbs: 15, fat: 0.2 },
-    watermelon: { calories: 45, protein: 0.9, carbs: 11, fat: 0.2 },
-    muskmelon: { calories: 60, protein: 1, carbs: 14, fat: 0.3 },
-    guava: { calories: 68, protein: 2.6, carbs: 14, fat: 1 },
-    "custard apple": { calories: 94, protein: 2.1, carbs: 24, fat: 0.4 },
-    papaya: { calories: 60, protein: 0.6, carbs: 15, fat: 0.1 },
+    function addFood() {
+      const input = document.getElementById("foodInput").value;
+      const parsed = parseFoodInput(input);
+      if (!parsed) {
+        alert("Food not found.");
+        return;
+      }
 
-    // Lunch
-roti: { calories: 80, protein: 3, carbs: 15, fat: 1 },
-    "2 roti": { calories: 160, protein: 6, carbs: 30, fat: 2 },
-    "3 roti": { calories: 240, protein: 9, carbs: 45, fat: 3 },
-    "100g paneer": { calories: 260, protein: 18, carbs: 6, fat: 20 },
-    "paneer curry": { calories: 300, protein: 16, carbs: 10, fat: 22 },
-rice: { calories: 130, protein: 2.5, carbs: 28, fat: 0.3 },
-    "100g paneer": { calories: 260, protein: 18, carbs: 6, fat: 20 }
-    "1 bowl rice": { calories: 200, protein: 4, carbs: 45, fat: 1 },
-    dal: { calories: 140, protein: 7, carbs: 20, fat: 4 },
-    "1 bowl dal": { calories: 140, protein: 7, carbs: 20, fat: 4 },
-    curd: { calories: 60, protein: 3.5, carbs: 5, fat: 3 },
-    "vegetable gawar": { calories: 80, protein: 2.5, carbs: 10, fat: 3 },
-    "potato sabji": { calories: 150, protein: 2, carbs: 25, fat: 6 },
-    "methi sabji": { calories: 120, protein: 3, carbs: 10, fat: 5 },
-    palak: { calories: 70, protein: 3, carbs: 8, fat: 2 },
-    bhindi: { calories: 90, protein: 2.5, carbs: 11, fat: 4 },
-    dudhi: { calories: 45, protein: 1.2, carbs: 9, fat: 1 },
-    pumpkin: { calories: 50, protein: 1, carbs: 12, fat: 0.2 },
-    karela: { calories: 60, protein: 1.5, carbs: 13, fat: 0.5 },
-    cabbage: { calories: 25, protein: 1.3, carbs: 5, fat: 0.1 },
-    cauliflower: { calories: 30, protein: 2, carbs: 5, fat: 0.3 },
-    capsicum: { calories: 40, protein: 1, carbs: 9, fat: 0.2 },
-    beans: { calories: 50, protein: 2.4, carbs: 10, fat: 0.4 },
-    cucumber: { calories: 15, protein: 0.7, carbs: 4, fat: 0.1 },
-    beetroot: { calories: 40, protein: 1.6, carbs: 10, fat: 0.1 },
-    carrot: { calories: 45, protein: 1, carbs: 10, fat: 0.2 },
+      const { item, quantity } = parsed;
+      const food = foodDB[item];
+      const cal = food.calories * quantity;
+      const pro = food.protein * quantity;
+      const carbs = food.carbs * quantity;
+      const fat = food.fat * quantity;
 
-    // Snacks & Dinner
-    jaggery: { calories: 15, protein: 0, carbs: 4, fat: 0 },
-    makhana: { calories: 70, protein: 3, carbs: 10, fat: 2 },
-    chana: { calories: 170, protein: 9, carbs: 30, fat: 2 },
-    cashews: { calories: 150, protein: 5, carbs: 9, fat: 12 },
-    kadhi: { calories: 150, protein: 5, carbs: 20, fat: 6 },
-    pulav: { calories: 300, protein: 6, carbs: 45, fat: 10 },
-    "jowar roti": { calories: 100, protein: 2.5, carbs: 22, fat: 1.5 },
-    pithla: { calories: 120, protein: 5, carbs: 10, fat: 6 },
-    "pav bhaji": { calories: 400, protein: 8, carbs: 50, fat: 20 },
-    daliya: { calories: 150, protein: 5, carbs: 30, fat: 1 },
-    thalipeeth: { calories: 120, protein: 3, carbs: 20, fat: 4 },
-    dhapate: { calories: 140, protein: 3.5, carbs: 22, fat: 5 }
-};
+      const row = document.createElement("tr");
+      row.innerHTML = `<td>${quantity} ${item}</td><td>${cal}</td><td>${pro}</td><td>${carbs}</td><td>${fat}</td>`;
+      document.getElementById("mealList").appendChild(row);
 
-const savedFoods = JSON.parse(localStorage.getItem("customFoods"));
-if (savedFoods) {
-foodDB = { ...foodDB, ...savedFoods };
-}
+      updateTotals(cal, pro, carbs, fat);
+      document.getElementById("foodInput").value = '';
+    }
 
-function calculateNutrition() {
-const input = document.getElementById("mealInput").value.toLowerCase();
-let total = { calories: 0, protein: 0, carbs: 0, fat: 0 };
-let rows = "";
+    function updateTotals(c, p, carb, f) {
+      document.getElementById("totalCalories").textContent =
+        +document.getElementById("totalCalories").textContent + c;
+      document.getElementById("totalProtein").textContent =
+        (+document.getElementById("totalProtein").textContent + p).toFixed(1);
+      document.getElementById("totalCarbs").textContent =
+        (+document.getElementById("totalCarbs").textContent + carb).toFixed(1);
+      document.getElementById("totalFat").textContent =
+        (+document.getElementById("totalFat").textContent + f).toFixed(1);
+    }
 
-for (let item in foodDB) {
-const regex = new RegExp(`(\\d+)?\\s*${item}`, "gi");
-let match;
-while ((match = regex.exec(input)) !== null) {
-const qty = parseFloat(match[1]) || 1;
-const data = foodDB[item];
-const itemCalories = data.calories * qty;
-const itemProtein = data.protein * qty;
-const itemCarbs = data.carbs * qty;
-const itemFat = data.fat * qty;
+    function addNewFood() {
+      const name = document.getElementById("newFoodName").value.toLowerCase().trim();
+      const calories = parseFloat(document.getElementById("newCalories").value);
+      const protein = parseFloat(document.getElementById("newProtein").value);
+      const carbs = parseFloat(document.getElementById("newCarbs").value);
+      const fat = parseFloat(document.getElementById("newFat").value);
 
-total.calories += itemCalories;
-total.protein += itemProtein;
-total.carbs += itemCarbs;
-total.fat += itemFat;
+      if (!name || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
+        alert("Please fill in all fields with valid values.");
+        return;
+      }
 
-rows += `
-         <tr>
-           <td>${qty} ${item}</td>
-           <td>${itemCalories.toFixed(1)} kcal</td>
-           <td>${itemProtein.toFixed(1)} g</td>
-           <td>${itemCarbs.toFixed(1)} g</td>
-           <td>${itemFat.toFixed(1)} g</td>
-         </tr>
-       `;
-}
-}
+      foodDB[name] = { calories, protein, carbs, fat };
+      alert(`${name} added to database.`);
 
-const resultTable = `
-     <h3>Nutrition Breakdown</h3>
-     <table>
-       <tr><th>Item</th><th>Calories</th><th>Protein</th><th>Carbs</th><th>Fat</th></tr>
-       ${rows}
-       <tr style="font-weight:bold; background:#f4f4f4">
-         <td>Total</td>
-         <td>${total.calories.toFixed(1)} kcal</td>
-         <td>${total.protein.toFixed(1)} g</td>
-         <td>${total.carbs.toFixed(1)} g</td>
-         <td>${total.fat.toFixed(1)} g</td>
-       </tr>
-     </table>
-   `;
-
-document.getElementById("results").innerHTML = rows ? resultTable : "<p>No matches found. Try adding items or checking spelling.</p>";
-}
-
-function openAddModal() {
-document.getElementById("addModal").style.display = "flex";
-}
-
-function closeAddModal() {
-document.getElementById("addModal").style.display = "none";
-document.getElementById("foodName").value = "";
-document.getElementById("caloriesVal").value = "";
-document.getElementById("proteinVal").value = "";
-document.getElementById("carbsVal").value = "";
-document.getElementById("fatVal").value = "";
-}
-
-function saveCustomFood() {
-const name = document.getElementById("foodName").value.toLowerCase().trim();
-const calories = parseFloat(document.getElementById("caloriesVal").value);
-const protein = parseFloat(document.getElementById("proteinVal").value);
-const carbs = parseFloat(document.getElementById("carbsVal").value);
-const fat = parseFloat(document.getElementById("fatVal").value);
-
-if (!name || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat)) {
-alert("Please fill in all fields correctly.");
-return;
-}
-
-foodDB[name] = { calories, protein, carbs, fat };
-localStorage.setItem("customFoods", JSON.stringify(getCustomFoods()));
-closeAddModal();
-alert(`Saved "${name}" successfully!`);
-}
-
-function getCustomFoods() {
-const original = ["banana", "boiled egg", "roti", "rice", "100g paneer"];
-const custom = {};
-for (let key in foodDB) {
-if (!original.includes(key)) {
-custom[key] = foodDB[key];
-}
-}
-return custom;
-}
-
-async function fetchFromAPI() {
-const name = document.getElementById("foodName").value.trim();
-if (!name) {
-alert("Enter a food item name first.");
-return;
-}
-
-const app_id = "55a75700";  // Replace with your actual Edamam App ID
-const app_key = "023ce47929a7cf45c4f6143e5591ed5a";  // Replace with your actual App Key
-
-const url = `https://api.edamam.com/api/nutrition-data?app_id=${app_id}&app_key=${app_key}&ingr=${encodeURIComponent(name)}`;
-
-try {
-const response = await fetch(url);
-const data = await response.json();
-
-if (!data.totalNutrients || !data.calories) {
-alert("❌ No nutrition data found for this item. Try refining your input or check online.");
-return;
-}
-
-document.getElementById("caloriesVal").value = data.calories.toFixed(1);
-document.getElementById("proteinVal").value = (data.totalNutrients.PROCNT?.quantity || 0).toFixed(1);
-document.getElementById("carbsVal").value = (data.totalNutrients.CHOCDF?.quantity || 0).toFixed(1);
-document.getElementById("fatVal").value = (data.totalNutrients.FAT?.quantity || 0).toFixed(1);
-
-} catch (error) {
-console.error(error);
-alert("⚠️ Failed to fetch from API. Check your internet or try again later.");
-}
-}
-</script>
-
+      // Clear inputs
+      document.getElementById("newFoodName").value = '';
+      document.getElementById("newCalories").value = '';
+      document.getElementById("newProtein").value = '';
+      document.getElementById("newCarbs").value = '';
+      document.getElementById("newFat").value = '';
+    }
+  </script>
 </body>
 </html>
